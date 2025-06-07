@@ -437,10 +437,6 @@ const QuoteBuilder: React.FC = () => {
           <Share className="h-4 w-4" />
           Compartir con cliente
         </Button>
-        <Button onClick={handleDownloadPDF} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Descargar PDF
-        </Button>
       </div>
       {showPDFLink && (
         <div className="flex justify-center mt-4">

@@ -24,7 +24,7 @@ const AppLayout: React.FC = () => {
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-gray-500">
-            © 2024 MERAV Proyectos - Professional Construction Quotes
+            Copyright© 2025. Todos los derechos reservados para MERAV Proyectos.
           </div>
         </div>
       </footer>
