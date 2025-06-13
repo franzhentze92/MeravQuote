@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Download, Share } from 'lucide-react';
@@ -31,6 +31,12 @@ interface HeaderFields {
   date: string;
 }
 
+interface ProjectIntroduction {
+  overview: string;
+  objectives: string;
+  benefits: string;
+}
+
 interface Section {
   name: string;
   items: LineItem[];
@@ -46,24 +52,79 @@ interface LineItem {
   id: string;
   type: string;
   name: string;
+  description: string;
   quantity: number;
   unit: string;
   unitPrice: number;
+  cost: number;
+  currency: string;
   tax: number;
 }
 
 const DEFAULT_SECTIONS = [
-  'OBRA CIVIL',
-  'ELECTRICIDAD',
-  'PLOMERÍA',
-  'PISOS Y AZULEJOS',
-  'HERRERIA',
-  'TABLA YESO',
-  'CARPINTERÍA',
-  'VENTANERÍA',
-  'ACABADOS',
-  'MOBILIARIO',
-  'VARIOS',
+  {
+    id: '1',
+    title: 'Levantamiento de Requerimientos',
+    description: 'Reuniones con áreas clave para entender necesidades, procesos y flujos de datos.',
+    cost: 240,
+    currency: 'USD'
+  },
+  {
+    id: '2',
+    title: 'Diseño y Arquitectura del Sistema',
+    description: 'Estructura técnica, base de datos, modularidad y escalabilidad.',
+    cost: 290,
+    currency: 'USD'
+  },
+  {
+    id: '3',
+    title: 'Desarrollo Backend',
+    description: 'Lógica de negocio, validaciones, conexión entre módulos, APIs.',
+    cost: 440,
+    currency: 'USD'
+  },
+  {
+    id: '4',
+    title: 'Desarrollo Frontend / UI',
+    description: 'Pantallas, formularios, navegación amigable, visual corporativa.',
+    cost: 390,
+    currency: 'USD'
+  },
+  {
+    id: '5',
+    title: 'Visualización de Datos',
+    description: 'Dashboards de indicadores para monitoreo en tiempo real.',
+    cost: 290,
+    currency: 'USD'
+  },
+  {
+    id: '6',
+    title: 'Automatización de Procesos',
+    description: 'Flujos automáticos: reportes, alertas, seguimientos.',
+    cost: 340,
+    currency: 'USD'
+  },
+  {
+    id: '7',
+    title: 'Pruebas y Validación',
+    description: 'Testeo técnico y funcional del sistema.',
+    cost: 140,
+    currency: 'USD'
+  },
+  {
+    id: '8',
+    title: 'Documentación y Capacitación',
+    description: 'Manuales básicos de uso y capacitación para usuarios internos.',
+    cost: 140,
+    currency: 'USD'
+  },
+  {
+    id: '9',
+    title: 'Soporte y Mantenimiento Inicial (6 meses)',
+    description: 'Soporte técnico, corrección de errores y ajustes operativos.',
+    cost: 230,
+    currency: 'USD'
+  }
 ];
 
 const QuoteBuilder: React.FC = () => {
@@ -91,37 +152,71 @@ const QuoteBuilder: React.FC = () => {
     date: '',
   });
 
+  // Project Introduction
+  const [introduction, setIntroduction] = useState<ProjectIntroduction>({
+    overview: `Grupo Premium Inmobiliario se encuentra en una etapa de crecimiento que demanda una transformación digital estratégica para consolidar su operación y fortalecer su liderazgo en el sector inmobiliario. Este proyecto tiene como objetivo el desarrollo e implementación de una solución tecnológica integral que unifique, automatice y optimice los procesos internos clave, al tiempo que se mejora significativamente la experiencia de sus clientes a través de un portal digital personalizado.\n\nLa plataforma a desarrollar permitirá centralizar la información proveniente de distintas áreas (ventas, ingeniería, finanzas, legal, postventa, entre otras), facilitando una gestión más ágil, transparente y basada en datos. Asimismo, incluirá un portal de clientes que ofrecerá acceso en tiempo real a reportes, estados de cuenta, avances de obra y documentos relevantes, fortaleciendo la confianza y la transparencia entre la empresa y sus clientes.`,
+    objectives: `• Diseñar e implementar un sistema centralizado para la gestión operativa y estratégica de proyectos inmobiliarios.\n• Digitalizar los flujos de trabajo internos, reduciendo el uso de herramientas dispersas como hojas de cálculo.\n• Automatizar tareas administrativas, aprobaciones, reportes y comunicaciones internas.\n• Mejorar la trazabilidad, el control y la auditoría de procesos en tiempo real.\n• Ofrecer indicadores clave (KPIs) para la toma de decisiones estratégicas basadas en datos.\n• Desarrollar un portal seguro para clientes, con acceso a información actualizada de sus proyectos.\n• Incrementar la eficiencia operativa y la calidad del servicio brindado por la empresa.`,
+    benefits: `• Estandarización y control de procesos a nivel organizacional.\n• Ahorro significativo de tiempo operativo gracias a la automatización de tareas repetitivas.\n• Acceso en tiempo real a información crítica para la toma de decisiones estratégicas.\n• Reducción de errores humanos y mejoras en la calidad del servicio al cliente.\n• Transparencia y confianza fortalecidas mediante un portal de clientes personalizado.\n• Mayor escalabilidad del negocio al contar con una plataforma digital adaptable.\n• Imagen institucional modernizada alineada con las mejores prácticas tecnológicas del sector.`
+  });
+
   // Sections and line items
-  const [sections, setSections] = useState<Section[]>(
-    DEFAULT_SECTIONS.map((name) => ({ name, items: [] }))
+  const [sections, setSections] = useState<Section[]>(() => 
+    DEFAULT_SECTIONS.map(section => ({
+      name: section.title,
+      items: [{
+        id: section.id,
+        type: 'service',
+        name: section.title,
+        description: section.description,
+        quantity: 1,
+        unit: 'servicio',
+        unitPrice: section.cost,
+        cost: section.cost,
+        currency: section.currency,
+        tax: 0
+      }]
+    }))
   );
 
   // Summary
   const [summary, setSummary] = useState<SummaryFields>({
     totalDirectCost: 0,
-    iva: 0,
+    iva: 5,
     total: 0,
   });
 
   // Terms, payment info, footer
   const [terms, setTerms] = useState<string[]>([
-    'No se incluye ningún otro servicio que no esté descrito en los renglones de esta cotización.',
-    'En esta propuesta se presentan los costos directos de cada renglón, y se contempla cobrar un % de honorarios sobre la inversión por coordinación, supervisión y administración del proyecto.',
-    'Se dará inicio a los trabajos al recibir el anticipo y aprobación por escrito por parte del cliente.',
-    'Tiempo de entrega: 5 semanas',
+    'Alcance limitado al detalle de esta cotización. No se incluye ningún otro servicio que no esté expresamente indicado en los renglones de esta propuesta técnica y económica.',
+    'El desarrollo se iniciará al recibir el anticipo y aprobación formal por escrito (correo o firma digital) por parte del cliente.',
+    'La duración total del proyecto es de 10 a 12 semanas, sujeto a los tiempos de respuesta del cliente en validaciones y aprobaciones.',
+    'El código fuente y documentación serán propiedad del cliente una vez se complete el pago total. El uso del software estará limitado a los fines definidos por Grupo Premium Inmobiliario.',
+    'Se incluye soporte técnico y mantenimiento correctivo por 3 meses a partir de la entrega final. Servicios posteriores se cotizarán por separado.',
+    'Cualquier servicio de terceros (licencias, servidores, suscripciones a plataformas como Power BI, etc.) no está incluido salvo que se especifique expresamente.',
+    'Las funcionalidades adicionales o cambios significativos posteriores a la aprobación inicial serán cotizados y autorizados por separado.'
   ]);
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'A Convenir',
-    bankDetails: '',
+    method: '25% de anticipación / 75% al entregar el proyecto',
+    bankName: 'Banco Industrial',
+    recipientName: 'Franz Hentze Movil',
+    accountNumber: '0180077836',
+    accountType: 'Monetaria',
+    currency: 'Quetzales'
   });
   const [footer, setFooter] = useState({
-    phone: '(502)5551-3554',
-    email: 'lpbarrios@aureagt.com',
-    address: '4 avenida 19-90 zona 14, oficina 7, nivel 3.',
+    phone: '(502) 3040-3813',
+    email: 'franz@soluciones-atn.com',
+    address: ''
   });
 
-  // Add timeline state and handlers
-  const [timeline, setTimeline] = useState<{ date: string; description: string }[]>([]);
+  // Timeline
+  const [timeline, setTimeline] = useState([
+    { date: '', description: 'Inicio del Proyecto y Levantamiento de Requerimientos' },
+    { date: '', description: 'Diseño de Arquitectura y Prototipo de Interfaz' },
+    { date: '', description: 'Desarrollo e Integración del Sistema' },
+    { date: '', description: 'Pruebas, Capacitación y Puesta en Marcha' }
+  ]);
+
   const addTimelineEvent = () => setTimeline([...timeline, { date: '', description: '' }]);
   const updateTimelineEvent = (idx: number, field: 'date' | 'description', value: string) => {
     const updated = [...timeline];
@@ -177,10 +272,13 @@ const QuoteBuilder: React.FC = () => {
       id: Date.now().toString() + Math.random(),
       type: '',
       name: '',
+      description: '',
       quantity: 1,
       unit: '',
       unitPrice: 0,
-      tax: 0,
+      cost: 0,
+      currency: '',
+      tax: 0
     });
     setSections(updatedSections);
   };
@@ -239,6 +337,7 @@ const QuoteBuilder: React.FC = () => {
     const doc = (
       <QuotePDF
         header={header}
+        introduction={introduction}
         sections={sections}
         summary={summary}
         terms={terms}
@@ -263,6 +362,7 @@ const QuoteBuilder: React.FC = () => {
     const doc = (
       <QuotePDF
         header={header}
+        introduction={introduction}
         sections={sections}
         summary={summary}
         terms={terms}
@@ -285,36 +385,110 @@ const QuoteBuilder: React.FC = () => {
     alert('Cotización enviada al cliente (simulado).');
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">MERAV Proyectos - Generador de Cotizaciones</h1>
-        <p className="text-gray-600 mt-2">Ingrese los datos del proyecto y genere una cotización profesional</p>
-      </div>
+  useEffect(() => {
+    // Calculate subtotal
+    const subtotal = sections.reduce((sum, section) =>
+      sum + section.items.reduce((itemSum, item) =>
+        itemSum + (item.quantity * item.unitPrice), 0), 0);
+    // Calculate IVA
+    const ivaAmount = subtotal * (summary.iva / 100);
+    // Calculate total
+    const total = subtotal + ivaAmount;
+    setSummary(prev => ({ ...prev, totalDirectCost: subtotal, total }));
+  }, [sections, summary.iva]);
 
-      <ClientForm onClientChange={handleClientChange} />
-      
-      {/* Header fields form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Datos del Proyecto</CardTitle>
-        </CardHeader>
-        <CardContent>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Información del Proyecto</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input name="project" value={header.project} onChange={handleHeaderChange} placeholder="Nombre del proyecto" />
-            <Input name="client" value={header.client} onChange={handleHeaderChange} placeholder="Nombre del cliente" />
-            <Input name="address" value={header.address} onChange={handleHeaderChange} placeholder="Dirección" />
-            <Input name="proposal" value={header.proposal} onChange={handleHeaderChange} placeholder="Tipo de propuesta" />
-            <Input name="date" value={header.date} onChange={handleHeaderChange} placeholder="Fecha" type="date" />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Proyecto</label>
+              <input
+                type="text"
+                value={header.project}
+                onChange={(e) => setHeader({ ...header, project: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cliente</label>
+              <input
+                type="text"
+                value={header.client}
+                onChange={(e) => setHeader({ ...header, client: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Dirección</label>
+              <input
+                type="text"
+                value={header.address}
+                onChange={(e) => setHeader({ ...header, address: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Propuesta</label>
+              <input
+                type="text"
+                value={header.proposal}
+                onChange={(e) => setHeader({ ...header, proposal: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Fecha</label>
+              <input
+                type="date"
+                value={header.date}
+                onChange={(e) => setHeader({ ...header, date: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
-      {/* Sections and line items form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Renglones de Cotización</CardTitle>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        {/* Project Introduction Section */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Introducción al Proyecto</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Descripción General</label>
+              <textarea
+                value={introduction.overview}
+                onChange={(e) => setIntroduction({ ...introduction, overview: e.target.value })}
+                rows={3}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Objetivos</label>
+              <textarea
+                value={introduction.objectives}
+                onChange={(e) => setIntroduction({ ...introduction, objectives: e.target.value })}
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Beneficios</label>
+              <textarea
+                value={introduction.benefits}
+                onChange={(e) => setIntroduction({ ...introduction, benefits: e.target.value })}
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Sections */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Renglones de Cotización</h2>
           {sections.map((section, sectionIdx) => (
             <div key={section.name + sectionIdx} className="mb-8">
               <div className="flex items-center gap-2 mb-2">
@@ -329,8 +503,8 @@ const QuoteBuilder: React.FC = () => {
               {section.items.map((item, itemIdx) => (
                 <div key={itemIdx} className="grid grid-cols-1 md:grid-cols-5 gap-2 mb-2 items-end">
                   <Textarea
-                    value={item.name}
-                    onChange={e => handleLineItemChange(sectionIdx, itemIdx, 'name', e.target.value)}
+                    value={item.description}
+                    onChange={e => handleLineItemChange(sectionIdx, itemIdx, 'description', e.target.value)}
                     placeholder="Descripción"
                     className="md:col-span-2"
                   />
@@ -360,23 +534,44 @@ const QuoteBuilder: React.FC = () => {
             </div>
           ))}
           <Button variant="outline" onClick={addSection} className="mt-2">Agregar sección</Button>
-        </CardContent>
-      </Card>
-      {/* Summary, terms, payment info, footer */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumen y Condiciones</CardTitle>
-        </CardHeader>
-        <CardContent>
+        </div>
+
+        {/* Summary, terms, payment info, footer */}
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Resumen y Condiciones</h2>
           <div className="mb-4">
             <h4 className="font-semibold mb-2">Resumen</h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-              <Input value={summary.totalDirectCost.toFixed(2)} readOnly placeholder="Total Costo Directo" />
-              <Input type="number" min={0} max={100} value={ivaPercent} onChange={e => setIvaPercent(Number(e.target.value))} placeholder="IVA (%)" />
-              <Input value={summary.iva.toFixed(2)} readOnly placeholder="IVA" />
-              <Input value={summary.total.toFixed(2)} readOnly placeholder="TOTAL" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Costo Directo Total</label>
+                <input
+                  type="number"
+                  value={summary.totalDirectCost}
+                  onChange={(e) => setSummary({ ...summary, totalDirectCost: Number(e.target.value) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">IVA</label>
+                <input
+                  type="number"
+                  value={summary.iva}
+                  onChange={(e) => setSummary({ ...summary, iva: Number(e.target.value) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Total</label>
+                <input
+                  type="number"
+                  value={summary.total}
+                  onChange={(e) => setSummary({ ...summary, total: Number(e.target.value) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
             </div>
           </div>
+
           <div className="mb-4">
             <h4 className="font-semibold mb-2">Términos y condiciones</h4>
             {terms.map((term, idx) => (
@@ -388,9 +583,63 @@ const QuoteBuilder: React.FC = () => {
             <Button variant="outline" onClick={addTerm}>Agregar término</Button>
           </div>
           <div className="mb-4">
-            <h4 className="font-semibold mb-2">Información de pago</h4>
-            <Input name="method" value={paymentInfo.method} onChange={handlePaymentInfoChange} placeholder="Forma de pago" />
-            <Input name="bankDetails" value={paymentInfo.bankDetails} onChange={handlePaymentInfoChange} placeholder="Cuenta bancaria" />
+            <h4 className="font-semibold mb-2">Información de Pago</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Método de Pago</label>
+                <input
+                  type="text"
+                  value={paymentInfo.method}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, method: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Banco</label>
+                <input
+                  type="text"
+                  value={paymentInfo.bankName}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, bankName: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nombre del Recipiente</label>
+                <input
+                  type="text"
+                  value={paymentInfo.recipientName}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, recipientName: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Número de Cuenta</label>
+                <input
+                  type="text"
+                  value={paymentInfo.accountNumber}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, accountNumber: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tipo de Cuenta</label>
+                <input
+                  type="text"
+                  value={paymentInfo.accountType}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, accountType: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Moneda</label>
+                <input
+                  type="text"
+                  value={paymentInfo.currency}
+                  onChange={(e) => setPaymentInfo({ ...paymentInfo, currency: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                />
+              </div>
+            </div>
           </div>
           <Card className="mb-4">
             <CardHeader>
@@ -425,25 +674,15 @@ const QuoteBuilder: React.FC = () => {
             <Input name="email" value={footer.email} onChange={handleFooterChange} placeholder="Email" />
             <Input name="address" value={footer.address} onChange={handleFooterChange} placeholder="Dirección" />
           </div>
-        </CardContent>
-      </Card>
-      {/* Export/Share buttons */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        <Button onClick={generatePDF} className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Exportar PDF
-        </Button>
-        <Button onClick={() => setShowEmailModal(true)} variant="outline" className="flex items-center gap-2">
-          <Share className="h-4 w-4" />
-          Compartir con cliente
-        </Button>
-      </div>
-      {showPDFLink && (
-        <div className="flex justify-center mt-4">
+        </div>
+
+        {/* Export/Share buttons */}
+        <div className="flex flex-wrap gap-3 justify-center">
           <PDFDownloadLink
             document={
               <QuotePDF
                 header={header}
+                introduction={introduction}
                 sections={sections}
                 summary={summary}
                 terms={terms}
@@ -452,33 +691,43 @@ const QuoteBuilder: React.FC = () => {
                 timeline={timeline}
               />
             }
-            fileName={`MERAV_Cotizacion_${header.project || 'proyecto'}.pdf`}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            fileName={`cotizacion-${header.project}-${header.date}.pdf`}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
-            {({ loading }) => loading ? 'Generando PDF...' : 'Descargar PDF'}
+            {({ blob, url, loading, error }) =>
+              loading ? 'Generando PDF...' : 'Descargar PDF'
+            }
           </PDFDownloadLink>
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Share functionality
+            }}
+          >
+            Compartir
+          </Button>
         </div>
-      )}
-      {showEmailModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white p-6 rounded shadow-lg flex flex-col gap-4 min-w-[320px]">
-            <h2 className="text-lg font-bold">Enviar cotización al cliente</h2>
-            <input
-              type="email"
-              className="border p-2 rounded"
-              placeholder="Correo del cliente"
-              value={emailToSend}
-              onChange={e => setEmailToSend(e.target.value)}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button onClick={() => setShowEmailModal(false)} variant="outline">Cancelar</Button>
-              <Button onClick={handleSendEmail} disabled={sending || !emailToSend}>
-                {sending ? 'Enviando...' : 'Enviar'}
-              </Button>
+        {showEmailModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div className="bg-white p-6 rounded shadow-lg flex flex-col gap-4 min-w-[320px]">
+              <h2 className="text-lg font-bold">Enviar cotización al cliente</h2>
+              <input
+                type="email"
+                className="border p-2 rounded"
+                placeholder="Correo del cliente"
+                value={emailToSend}
+                onChange={e => setEmailToSend(e.target.value)}
+              />
+              <div className="flex gap-2 justify-end">
+                <Button onClick={() => setShowEmailModal(false)} variant="outline">Cancelar</Button>
+                <Button onClick={handleSendEmail} disabled={sending || !emailToSend}>
+                  {sending ? 'Enviando...' : 'Enviar'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
